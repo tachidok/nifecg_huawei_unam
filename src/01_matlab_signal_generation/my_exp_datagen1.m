@@ -108,19 +108,19 @@ my_fhr = out.param.fhr;
 my_fs = out.param.fs;
 
 % Save baseline data
-filename_baseline_signal_mecg = sprintf("output_data/baseline/mecg.%4.4d.fs_%d_mhr_%d_fhr_%d.csv", 0, my_fs, my_mhr, my_fhr);
+filename_baseline_signal_mecg = sprintf("./output_data/baseline/mecg.%4.4d.fs_%d_mhr_%d_fhr_%d.csv", 0, my_fs, my_mhr, my_fhr);
 writematrix(out.mecg, filename_baseline_signal_mecg);
 
-filename_baseline_signal_fecg = sprintf("output_data/baseline/fecg.%4.4d.fs_%d_mhr_%d_fhr_%d.csv", 0, my_fs, my_mhr, my_fhr);
+filename_baseline_signal_fecg = sprintf("./output_data/baseline/fecg.%4.4d.fs_%d_mhr_%d_fhr_%d.csv", 0, my_fs, my_mhr, my_fhr);
 writematrix(out.fecg{1,1}, filename_baseline_signal_fecg);
 
-filename_baseline_mqrs = sprintf("output_data/baseline/mqrs.%4.4d.fs_%d_mhr_%d_fhr_%d.csv", 0, my_fs, my_mhr, my_fhr);
+filename_baseline_mqrs = sprintf("./output_data/baseline/mqrs.%4.4d.fs_%d_mhr_%d_fhr_%d.csv", 0, my_fs, my_mhr, my_fhr);
 writematrix(out.mqrs, filename_baseline_mqrs);
 
-filename_baseline_fqrs = sprintf("output_data/baseline/fqrs.%4.4d.fs_%d_mhr_%d_fhr_%d.csv", 0, my_fs, my_mhr, my_fhr);
+filename_baseline_fqrs = sprintf("./output_data/baseline/fqrs.%4.4d.fs_%d_mhr_%d_fhr_%d.csv", 0, my_fs, my_mhr, my_fhr);
 writematrix(out.fqrs{1,1}, filename_baseline_fqrs);
 
-filename_baseline_nifecg = sprintf("output_data/baseline/nifecg.%4.4d.fs_%d_mhr_%d_fhr_%d.csv", 0, my_fs, my_mhr, my_fhr);
+filename_baseline_nifecg = sprintf("./output_data/baseline/nifecg.%4.4d.fs_%d_mhr_%d_fhr_%d.csv", 0, my_fs, my_mhr, my_fhr);
 writematrix(out.mixture, filename_baseline_nifecg);
 
 %%% == (5) ADDING HEART RATE VARIABILITY
@@ -129,7 +129,7 @@ disp('---- Example (5): ADDING HEART RATE VARIABILITY ----');
 param.fs = 1000;
 
 % Set the number of samples to generate
-n_samples = 50;
+n_samples = 100;
 
 % Initialise the random generator to make them repeatable
 rng(0, 'twister');
@@ -196,19 +196,19 @@ for i=1:n_samples
     my_fs = out.param.fs;
     
     % Save data
-    filename_hrv_signal_mecg = sprintf("output_data/heart_rate_variable/mecg.%4.4d.fs_%d_mhr_%d_fhr_%d.csv", i, my_fs, my_mhr, my_fhr);
+    filename_hrv_signal_mecg = sprintf("./output_data/heart_rate_variable/mecg.%4.4d.fs_%d_mhr_%d_fhr_%d.csv", i, my_fs, my_mhr, my_fhr);
     writematrix(out.mecg, filename_hrv_signal_mecg);
     
-    filename_hrv_signal_fecg = sprintf("output_data/heart_rate_variable/fecg.%4.4d.fs_%d_mhr_%d_fhr_%d.csv", i, my_fs, my_mhr, my_fhr);
+    filename_hrv_signal_fecg = sprintf("./output_data/heart_rate_variable/fecg.%4.4d.fs_%d_mhr_%d_fhr_%d.csv", i, my_fs, my_mhr, my_fhr);
     writematrix(out.fecg{1,1}, filename_hrv_signal_fecg);
     
-    filename_hrv_mqrs = sprintf("output_data/heart_rate_variable/mqrs.%4.4d.fs_%d_mhr_%d_fhr_%d.csv", i, my_fs, my_mhr, my_fhr);
+    filename_hrv_mqrs = sprintf("./output_data/heart_rate_variable/mqrs.%4.4d.fs_%d_mhr_%d_fhr_%d.csv", i, my_fs, my_mhr, my_fhr);
     writematrix(out.mqrs, filename_hrv_mqrs);
     
-    filename_hrv_fqrs = sprintf("output_data/heart_rate_variable/fqrs.%4.4d.fs_%d_mhr_%d_fhr_%d.csv", i, my_fs, my_mhr, my_fhr);
+    filename_hrv_fqrs = sprintf("./output_data/heart_rate_variable/fqrs.%4.4d.fs_%d_mhr_%d_fhr_%d.csv", i, my_fs, my_mhr, my_fhr);
     writematrix(out.fqrs{1,1}, filename_hrv_fqrs);
     
-    filename_hrv_nifecg = sprintf("output_data/heart_rate_variable/nifecg.%4.4d.fs_%d_mhr_%d_fhr_%d.csv", i, my_fs, my_mhr, my_fhr);
+    filename_hrv_nifecg = sprintf("./output_data/heart_rate_variable/nifecg.%4.4d.fs_%d_mhr_%d_fhr_%d.csv", i, my_fs, my_mhr, my_fhr);
     writematrix(out.mixture, filename_hrv_nifecg);
 
     %filename_hrv_mat = sprintf("output_data/heart_rate_variable/out%4.4d_fs_%d_mhr_%d_fhr_%d.mat", i, my_fs, my_mhr, my_fhr);
