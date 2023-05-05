@@ -150,6 +150,10 @@ r_range_MHR = [min(random_MHR) max(random_MHR)]
 % about twice the normal adults HR
 a = 120;
 b = 160;
+
+%a = 80; % 5 weeks (beginnig)
+%b = 180; % 12 weeks
+
 % Create a vector of random numbers within the range
 random_FHR = a + (b-a).*rand(n_samples,1);
 
