@@ -14,7 +14,6 @@ Generate the conda environment
 
 ```
 conda env create --file nifecg.yml
-
 ```
 
 Install all python dependecies required for the project
@@ -22,11 +21,10 @@ Install all python dependecies required for the project
 pip install -r requirements.txt
 ```
 
-### Update the conda and pip requirements files
+## Update the conda and pip requirements files
 If you required to install additional tools please update the
 nifecg.yml and requiremets.txt files.
 
-Update the nifecg.yml file
 ```
 rm nifecg.yml
 conda env export --name nifecg > nifecg.yml
