@@ -39,14 +39,14 @@ def find_files(input_folder, file_extensions, initial_file_names):
 
 # ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
-def move_file_into_subfolder(item, ranges):
+def move_file_into_subfolder(file_path, folder_path, ranges, use_mother_or_fetal_hr):
 
     '''
     Move a file in the corresponding folder based on its range
     '''
     
     # Get the signal path
-    signal_path = item.split("/")
+    signal_path = file_path.split("/")
     
     # Get the signal name
     signal_name = signal_path[-1]
@@ -59,8 +59,33 @@ def move_file_into_subfolder(item, ranges):
 
     # Based on the signal range, move it into the corresponding folder
     print(signal_features)
+    
+    index = 0
+    if (use_mother_or_fetal_hr == 'm'):
+        index = 3
 
-    HERE HERE HERE HERE
+    if (use_mother_or_fetal_hr == 'f'):
+        index = 5
+
+    # Get the heart rate
+    hr = int(signal_features[index])
+    # Get the corresponding range for the hr
+    for irange in ranges:
+        if (hr >= irange[0] and hr <= irange[1]):
+            # Move the file into the corresponding folder
+            range_str = '_'.join(map(str, irange))
+            range_path = os.path.join(folder_path, range_str)
+            
+            file_name = os.path.basename(file_path)
+            new_file_path = os.path.join(range_path, file_name)
+            
+            shutil.move(file_path, new_file_path)
+
+            # The file was moved
+            return True
+
+    # There is no corresponding range for the file
+    return False
         
 # ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
@@ -78,7 +103,8 @@ def main():
     parser.add_argument("--ext", type=str, nargs='+', help="The list of extensions for the files to look for", required=True, choices=['csv', 'png', 'jpeg', 'bmp', 'txt', 'jpg'])
     parser.add_argument("--input_file_names", type=str, nargs='+', help="The initial filenames of the signals", required=True)
     parser.add_argument("--output_folder", type=str, help="The output folder to sorted signals", required=True)
-    parser.add_argument("--ranges", type=int, nargs='+', help="A list of sorted ranges to sort the signals in subfolders", required=True)
+    parser.add_argument("--ranges", type=int, nargs='+', help="A list of sorted ranges to sort the signals into subfolders", required=True)
+    parser.add_argument("--mf", type=str, help="Use mother (m) or fetal (f) heart rate to sort signals into subfolders", required=True, choices=['m', 'f'])
     
     # parse args
     args = parser.parse_args()
@@ -123,10 +149,9 @@ def main():
     found_files, n_found_files = find_files(args.input_folder, args.ext, args.input_file_names)
     
     print(f"{rank}/{n_cores}::Found [{n_found_files}] files with the specified features")
-    
-    # Create the list of image features
-    ###  HERE MOVE THE FILES INTO THE SPECIFIED FOLDER
-    
+    n_moved_files = 0
+    n_no_moved_files = 0
+        
     # --------------------------------------------------------------
     # Move files into folders
     # --------------------------------------------------------------
@@ -137,12 +162,19 @@ def main():
             item = found_files[counter]
             print(f"{rank}/{n_cores}::{counter}/{n_found_files}: Processing {item}")
             
-            move_file_into_subfolder(item, ranges)
+            moved = move_file_into_subfolder(item, args.output_folder, ranges, args.mf)
+            if moved:
+                n_moved_files+=1
+            else:
+                n_no_moved_files+=1
                         
             counter+=n_cores
         
     else:
         print(f"{rank}/{n_cores}::No found files with the specified features")
+
+    print(f"{rank}/{n_cores}::The number of moved files is {n_moved_files}\n")
+    print(f"{rank}/{n_cores}::The number of NO moved files is {n_no_moved_files}\n")
     
     print(f"\n{rank}/{n_cores}::[Done]\n")
 
