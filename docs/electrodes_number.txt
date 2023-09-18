@@ -1,0 +1,25 @@
+nodes that should be considered for classification
+5
+12, 13, 14
+19, 20, 21, 22, 23
+26, 27, 28, 29, 30, 31
+
+
+Time vs voltage
+
+In MatLab the y-axis shows this legend
+Amplitude [NU]
+
+https://www.analog.com/en/analog-dialogue/articles/ecg-front-end-design-simplified.html#:~:text=The%20front%20end%20of%20an,between%20the%20electrodes%20and%20ground.
+
+The front end of an ECG must be able to deal with extremely weak signals ranging from 0.5 mV to 5.0 mV, combined with a dc component of up to ±300 mV—resulting from the electrode-skin contact—plus a common-mode component of up to 1.5 V, resulting from the potential between the electrodes and ground. 
+
+60,000
+
+10,000
+
+4,000
+
+
+
+
