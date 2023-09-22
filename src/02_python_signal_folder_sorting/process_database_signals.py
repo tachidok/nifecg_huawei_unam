@@ -78,7 +78,8 @@ def move_file_into_subfolder(file_path, folder_path, ranges, use_mother_or_fetal
             
             file_name = os.path.basename(file_path)
             new_file_path = os.path.join(range_path, file_name)
-            
+
+            #shutil.copy(file_path, new_file_path)
             shutil.move(file_path, new_file_path)
 
             # The file was moved
@@ -124,7 +125,7 @@ def main():
     
     # Store the ranges
     ranges = [tuple(args.ranges[i:i+2]) for i in range(0, len(args.ranges), 2)]
-
+    
     # Only the master core creates the subfolders
     if rank == 0:
         # create a folder for each pair in ranges
@@ -151,7 +152,7 @@ def main():
     print(f"{rank}/{n_cores}::Found [{n_found_files}] files with the specified features")
     n_moved_files = 0
     n_no_moved_files = 0
-        
+    
     # --------------------------------------------------------------
     # Move files into folders
     # --------------------------------------------------------------
