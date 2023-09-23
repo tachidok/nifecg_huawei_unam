@@ -4,6 +4,7 @@ import os
 import sys
 import shutil
 import argparse
+import random
 
 from mpi4py import MPI
 
@@ -79,8 +80,8 @@ def move_file_into_subfolder(file_path, folder_path, ranges, use_mother_or_fetal
             file_name = os.path.basename(file_path)
             new_file_path = os.path.join(range_path, file_name)
 
-            #shutil.copy(file_path, new_file_path)
-            shutil.move(file_path, new_file_path)
+            shutil.copy(file_path, new_file_path)
+            #shutil.move(file_path, new_file_path)
 
             # The file was moved
             return True
@@ -106,6 +107,7 @@ def main():
     parser.add_argument("--output_folder", type=str, help="The output folder to sorted signals", required=True)
     parser.add_argument("--ranges", type=int, nargs='+', help="A list of sorted ranges to sort the signals into subfolders", required=True)
     parser.add_argument("--mf", type=str, help="Use mother (m) or fetal (f) heart rate to sort signals into subfolders", required=True, choices=['m', 'f'])
+    parser.add_argument("--percentage_for_training_set", type=float, help="The percentage of files for the training set", required=True)
     
     # parse args
     args = parser.parse_args()
@@ -115,11 +117,20 @@ def main():
     # -------------------------------------------------------------
     # Validate input arguments
     # -------------------------------------------------------------
-    
+
     # Only master core check if the output folder already exists
     if rank == 0 and os.path.exists(args.output_folder):
         parser.error('The output folder already exists')
     
+    output_training_folder_name = os.path.join(args.output_folder, "training_set")
+    output_testing_folder_name = os.path.join(args.output_folder, "testing_set")
+    # Only master core check if the output folder already exists
+    if rank == 0 and os.path.exists(output_training_folder_name):
+        parser.error('The output training folder already exists')
+
+    if rank == 0 and os.path.exists(output_testing_folder_name):
+        parser.error('The output testing folder already exists')
+        
     if len(args.ranges) % 2 != 0:
         parser.error('The number of input numbers in ranges must be even')
     
@@ -131,7 +142,13 @@ def main():
         # create a folder for each pair in ranges
         for irange in ranges:
             range_str = '_'.join(map(str, irange))
-            range_path = os.path.join(args.output_folder, range_str)
+
+            # Create folder in the training folder
+            range_path = os.path.join(output_training_folder_name, range_str)
+            os.makedirs(range_path, exist_ok=True)
+
+            # Create folder in the testing folder
+            range_path = os.path.join(output_testing_folder_name, range_str)
             os.makedirs(range_path, exist_ok=True)
     
         print(f"{rank}/{n_cores}::Created {len(ranges)} folders for the ranges: {ranges}")
@@ -152,18 +169,64 @@ def main():
     print(f"{rank}/{n_cores}::Found [{n_found_files}] files with the specified features")
     n_moved_files = 0
     n_no_moved_files = 0
+
+    # Generate a list with the indices of the files
+    percentage_for_training_set = args.percentage_for_training_set
+    n_files_for_training_set = int(percentage_for_training_set * n_found_files)
+    n_files_for_testing_set = n_found_files - n_files_for_training_set
+
+    # Generate a list with the indices of the files
+    files_indices = list(range(n_found_files))
     
+    # Shuffle the input list randomly
+    random.shuffle(files_indices)
+
+    # Generate the list with the indices for the training files
+    training_files_indices = files_indices[:n_files_for_training_set]
+    testing_files_indices = files_indices[n_files_for_training_set:]
+
+    if rank == 0:
+        print("The training files indices")
+        print(training_files_indices)
+
+        print("The testing files indices")
+        print(testing_files_indices)
+        
     # --------------------------------------------------------------
     # Move files into folders
     # --------------------------------------------------------------
     if n_found_files > 0:
+
+        # **********************************
+        # Move the files for training
+        # **********************************
         counter = rank
         
-        while counter < n_found_files:
-            item = found_files[counter]
-            print(f"{rank}/{n_cores}::{counter}/{n_found_files}: Processing {item}")
+        while counter < len(training_files_indices):
+
+            file_index = training_files_indices[counter]
+            item = found_files[file_index]
+            print(f"{rank}/{n_cores}::{counter}/{n_files_for_training_set}: To training set {item}")
             
-            moved = move_file_into_subfolder(item, args.output_folder, ranges, args.mf)
+            moved = move_file_into_subfolder(item, output_training_folder_name, ranges, args.mf)
+            if moved:
+                n_moved_files+=1
+            else:
+                n_no_moved_files+=1
+
+            counter+=n_cores
+        
+        # **********************************
+        # Move the files for testing
+        # **********************************
+        counter = rank
+        
+        while counter < len(testing_files_indices):
+            file_index = testing_files_indices[counter]
+            item = found_files[file_index]
+            print(f"{rank}/{n_cores}::{counter}/{n_files_for_testing_set}: To test set {item}")
+            
+            moved = move_file_into_subfolder(item, output_testing_folder_name, ranges, args.mf)
             if moved:
                 n_moved_files+=1
             else:
@@ -188,10 +251,6 @@ def main():
     
 # ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
-'''
-Usage:
-   ./process_database_signals.py --input_folder input_folder --ext extensions of files --output_folder output_folder --ranges --ranges
-'''
 if __name__ == '__main__':
     # Run the main function
     main()
