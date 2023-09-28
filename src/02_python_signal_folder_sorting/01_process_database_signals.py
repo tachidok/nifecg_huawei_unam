@@ -80,8 +80,8 @@ def move_file_into_subfolder(file_path, folder_path, ranges, use_mother_or_fetal
             file_name = os.path.basename(file_path)
             new_file_path = os.path.join(range_path, file_name)
 
-            shutil.copy(file_path, new_file_path)
-            #shutil.move(file_path, new_file_path)
+            #shutil.copy(file_path, new_file_path)
+            shutil.move(file_path, new_file_path)
 
             # The file was moved
             return True
