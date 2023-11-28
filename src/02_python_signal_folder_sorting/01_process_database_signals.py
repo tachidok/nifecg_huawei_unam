@@ -80,13 +80,14 @@ def move_file_into_subfolder(file_path, folder_path, ranges, use_mother_or_fetal
             file_name = os.path.basename(file_path)
             new_file_path = os.path.join(range_path, file_name)
 
-            #shutil.copy(file_path, new_file_path)
-            shutil.move(file_path, new_file_path)
+            shutil.copy(file_path, new_file_path)
+            #shutil.move(file_path, new_file_path)
 
             # The file was moved
             return True
 
     # There is no corresponding range for the file
+    print(f"No corresponding {hr} found for {item}: NO MOVED")
     return False
         
 # ------------------------------------------------------------------------------
@@ -206,12 +207,13 @@ def main():
 
             file_index = training_files_indices[counter]
             item = found_files[file_index]
-            print(f"{rank}/{n_cores}::{counter}/{n_files_for_training_set}: To training set {item}")
             
             moved = move_file_into_subfolder(item, output_training_folder_name, ranges, args.mf)
             if moved:
+                print(f"{rank}/{n_cores}::{counter}/{n_files_for_training_set}: MOVED to training set {item}")
                 n_moved_files+=1
             else:
+                print(f"{rank}/{n_cores}::{counter}/{n_files_for_training_set}: NO MOVED to training set {item}")
                 n_no_moved_files+=1
 
             counter+=n_cores
@@ -228,8 +230,10 @@ def main():
             
             moved = move_file_into_subfolder(item, output_testing_folder_name, ranges, args.mf)
             if moved:
+                print(f"{rank}/{n_cores}::{counter}/{n_files_for_testing_set}: MOVED to test set {item}")
                 n_moved_files+=1
             else:
+                print(f"{rank}/{n_cores}::{counter}/{n_files_for_testing_set}: NO MOVED to test set {item}")
                 n_no_moved_files+=1
                         
             counter+=n_cores
