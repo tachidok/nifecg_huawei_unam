@@ -155,10 +155,10 @@ class SignalSubSample(object):
     def __call__(self, sample):
             
         # Get the indices of the columns to extract
-        indexes_columns = list(range(0, sample.shape[1], sample_interval))  # Select every "sample_interval" column
+        indexes_columns = list(range(0, sample.shape[1], self.sample_interval))  # Select every "sample_interval" column
         
         # Extract selected channels and columns
-        subsample_signal = sample[channels, :][:, indexes_columns]
+        subsample_signal = sample[self.channels, :][:, indexes_columns]
         
         #print(subsample_signal.shape)
                                
@@ -343,19 +343,20 @@ def compare_tensors(tensor1, tensor2):
 # Train the model
 # ******************************************************************************
 # Define the training method
-def train(model=net,
-    #accuracy_metric = torchmetrics.classification.Accuracy(task="multic
-          optimizer=opt,
-          n_epochs=n_epochs,
-          loss_fn=criterion,
-          lr=learning_rate):
+def train(model, optimizer, n_epochs, loss_fn, lr, train_loader, device, output_file):
     
     #accuracy_metric = torchmetrics.classification.Accuracy(task="multiclass", num_classes = n_output_classes)
+
+    # Get the batch size from the train loader
+    batch_size = train_loader.batch_size
     
     # Indicate the Pytorch backend we are on training mode
     model.train()
     loss_lt = []
     accuracy_lt = []
+    
+    output_lines = []
+    output_lines.append("\nn_epochs:{:d}".format(n_epochs))
     
     # Training loop
     for epoch in range(n_epochs):
@@ -405,10 +406,14 @@ def train(model=net,
             #acc = accuracy_metric(outputs, batch_labels)
             
             # Print the loss for monitoring
-            print('Epoch [{}/{}], batch [{}/{}], lr={:.6f}, batch Loss: {:.4f}, batch accuracy: {:.4f}'.format(epoch+1, n_epochs,
-                                                                                                                batch_counter + 1, len(train_loader),
-                                                                                                                lr, loss.item(),
-                                                                                                                batch_accuracy*100.0/batch_size))
+            print('Epoch [{}/{}], batch [{}/{}], lr={:.6f}, batch Loss: {:.4f}, batch accuracy: {:.4f}'
+                  .format(epoch+1,
+                          n_epochs,
+                          batch_counter + 1,
+                          len(train_loader),
+                          lr,
+                          loss.item(),
+                          batch_accuracy*100.0/batch_size))
             #print("Torch Metrics: {}".format(acc))
             
             # Increase the batch counter
@@ -423,9 +428,12 @@ def train(model=net,
         # Print the total loss of the epoch
         print('Epoch: {} training loss: {:.4f}, training accuracy: {:.4f}'.format(epoch+1, running_loss/len(train_loader), accuracy_epoch/len(train_loader)))
         
+        output_lines.append('\nEpoch: {} training loss: {:.4f}, training accuracy: {:.4f}'.format(epoch+1, running_loss/len(train_loader), accuracy_epoch/len(train_loader)))
+        
         #acc = accuracy_metric.compute()
         #print("All batches torch metric: {}".format(acc))
-    
+
+    output_file.writelines(output_lines)
     #accuracy_metric.reset()
     
     fig = plt.figure(figsize=(17, 5))
@@ -452,14 +460,17 @@ def train(model=net,
 # Test the model
 # ******************************************************************************
 # Define the testing method
-def test(model=net,
-        loss_fn=criterion,
-        lr=learning_rate):
+def test(model, loss_fn, lr, test_loader, device, output_file):
+
+    # Get the batch size from the test loader
+    batch_size = test_loader.batch_size
     
     # Indicate the Pytorch backend we are on testing mode
     model.eval()
     accuracy = 0.0
-    total_loss = 0.0 
+    total_loss = 0.0
+
+    output_lines = []
     
     # Use no grad to reduce memory and computation cost
     with torch.no_grad():
@@ -510,7 +521,13 @@ def test(model=net,
         print("Test loss: {:.4f}, test accuracy: {:.4f}".format(
             total_loss/(len(test_loader)*batch_size),
             accuracy*100.0/(len(test_loader)*batch_size)))
-    
+
+        output_lines.append("\nTest loss: {:.4f}, test accuracy: {:.4f}".format(
+            total_loss/(len(test_loader)*batch_size),
+            accuracy*100.0/(len(test_loader)*batch_size)))
+
+        output_file.writelines(output_lines)
+        
 # ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
 def main():
@@ -581,7 +598,9 @@ def main():
     root_output_folder = root_output_folder + "/"
     
     # Print input arguments for NN
+    print("=======================================================")
     print("Running experiment with the following arguments values:")
+    print("=======================================================")
     
     # ********************************
     # Print and save parameters values
@@ -591,16 +610,16 @@ def main():
     print("sample_interval:{:d}".format(sample_interval))
     print("batch_size:{:d}".format(batch_size))
     print("n_epochs:{:d}".format(n_epochs))
-    print("learning_rage:{:.6f}".format(learning_rate))
+    print("learning_rate:{:.6f}".format(learning_rate))
     print("use_device:{:s}".format(use_device))
     print("training_folder_name:{:s}".format(training_folder_name))
     print("testing_folder_name:{:s}".format(testing_folder_name))
     print("root_output_folder:{:s}".format(root_output_folder))
 
     # Save to disk
-    output_parameters_file = root_output_folder + "parameters.txt"
+    output_file = root_output_folder + "output.txt"
 
-    with open(output_parameters_file, "w") as f:
+    with open(output_file, "w") as f:
 
         # Add the line arguments as a comment to the file
         n = len(sys.argv)
@@ -617,7 +636,7 @@ def main():
         output_lines.append("sample_interval:{:d}\n".format(sample_interval))
         output_lines.append("batch_size:{:d}\n".format(batch_size))
         output_lines.append("n_epochs:{:d}\n".format(n_epochs))
-        output_lines.append("learning_rage:{:.6f}\n".format(learning_rate))
+        output_lines.append("learning_rate:{:.6f}\n".format(learning_rate))
         output_lines.append("use_device:{:s}\n".format(use_device))
         output_lines.append("training_folder_name:{:s}\n".format(training_folder_name))
         output_lines.append("testing_folder_name:{:s}\n".format(testing_folder_name))
@@ -636,8 +655,10 @@ def main():
         device = "npu:0"
     elif use_device == "gpu" and torch.cuda.is_available():
         device = "cuda"
-    
-    print("\nThe using device is:{:s}\n".format(device))
+
+    print("\n=======================================================")
+    print("The using device is:{:s}".format(device))
+    print("=======================================================")
 
     # The folder with the dataset
     #training_folder_name = "../../data/sorted_by_mhr/training_set"
@@ -702,13 +723,19 @@ def main():
     train_loader = DataLoader(training_dataset, batch_size=batch_size, shuffle=True)
     test_loader = DataLoader(testing_dataset, batch_size=batch_size, shuffle=False)
 
-    print("Training/testing data loaders info:\n")
+    print("\n=======================================================")
+    print("Training/testing data loaders info:")
+    print("=======================================================")
     print("Train loader: Total number of batches {} using {} items per batch. Total samples {}".format(len(train_loader), batch_size, len(train_loader) * batch_size))
     print("Test loader: Total number of batches {} using {} items per batch. Total samples {}".format(len(test_loader), batch_size, len(test_loader) * batch_size))
 
     # ***********************************
     # Instantiate the optimiser and model
     # ***********************************
+
+    print("\n=======================================================")
+    print("Neural network information")
+    print("=======================================================")
     
     # Get the number of channels on the processing signal
     n_channels = len(channels)
@@ -721,11 +748,11 @@ def main():
     
     #n_input_features = 2040000
     n_input_features = n_channels * n_data_per_channel # input dimension
-    print("Number of input features: {}\n".format(n_input_features))
+    print("Number of input features: {}".format(n_input_features))
 
     # Create an instance of the neural network and move it to the device
-    #net = LinearClassifier(n_channels, n_data_per_channel, n_output_classes).to(device)
-    net = CNNClassifier(n_channels, n_data_per_channel, n_output_classes).to(device)
+    net = LinearClassifier(n_channels, n_data_per_channel, n_output_classes).to(device)
+    #net = CNNClassifier(n_channels, n_data_per_channel, n_output_classes).to(device)
 
     #net.cuda()
     #net.cpu()
@@ -744,31 +771,56 @@ def main():
     #opt = optim.SGD(net.parameters(), lr=learning_rate)
 
     # Summary of the model
-    print("Manual summary of the model")
+    print("\nManual summary of the model")
     for p in net.parameters():
         print(p.shape)
 
     # Summary of the model
-    print("Automatic summary of the model")
+    print("\nAutomatic summary of the model")
     #summary(net, input_size = (batch_size, 2040000, 4))
     summary(net, input_size = (batch_size, n_input_features))
     #summary(net)
-
+    
     # ************************
     # Call the training method
     # ************************
-    train(net, opt, n_epochs, criterion)
+    print("\n=======================================================")
+    print("Training stage")
+    print("=======================================================")
+    tic = time.perf_counter()
+    with open(output_file, "a") as f:
+
+        f.write("\n\nTraining stage")
+        
+        train(net, opt, n_epochs, criterion, learning_rate, train_loader, device, f)
+        toc = time.perf_counter()
+        print("\nTime for training:{:.4f}s".format(toc - tic))
+
+        output_lines = []
+        output_lines.append("\nTime for training:{:.4f}s".format(toc - tic))
+        f.writelines(output_lines)
 
     # ********************
     # Call the test method
     # ********************
-    test(net, criterion)
+    print("\n=======================================================")
+    print("Testing stage")
+    print("=======================================================")
+    tic = time.perf_counter()
+    with open(output_file, "a") as f:
+
+        f.write("\n\nTesting stage")
+        
+        test(net, criterion, learning_rate, test_loader, device, f)
+        toc = time.perf_counter()
+        print("\nTime for testing:{:.4f}s".format(toc - tic))
+
+        output_lines = []
+        output_lines.append("\nTime for testing:{:.4f}s".format(toc - tic))
+        f.writelines(output_lines)
+
     
     return 0
-
-    tic = time.clock()
-    toc = time.clock()
-    print(toc - tic)
 
 # ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
