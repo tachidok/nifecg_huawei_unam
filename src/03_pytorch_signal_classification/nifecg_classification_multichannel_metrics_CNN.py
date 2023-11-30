@@ -18,7 +18,7 @@ import shutil
 import argparse
 
 # Pandas import
-import pandas as pd
+#import pandas as pd
 
 # Plotting
 import matplotlib.pyplot as plt
@@ -64,7 +64,7 @@ class FileDataset(Dataset):
 
         # Read the file
         data = self._read_file(file_path)
-
+        
         # Apply transformation if provided
         if self.transform:
             data = self.transform(data)
@@ -84,6 +84,10 @@ class FileDataset(Dataset):
     def _read_file(self, file_path):
         
         signal_data = np.loadtxt(file_path, dtype=np.float32, delimiter=",")
+        #print("Shape of the just transformed signal -from numpy to Tensor")
+        #print(signal_data.shape)
+        #print(signal_data.shape[0])
+        #print(signal_data.shape[1])
         # Transform to torch vector and reshape to column vector
         return torch.from_numpy(signal_data)
         
@@ -138,6 +142,9 @@ class ToRowVector(object):
                         
         #reshaped_sample = sample.view(sample.shape[0]*sample.shape[1])
         reshaped_sample = preshaped.view(preshaped.shape[0])
+
+        #print("ToRowVector")
+        #print(reshaped_sample.shape)
         
         #return sample
         return reshaped_sample
@@ -159,11 +166,21 @@ class SignalSubSample(object):
         
         # Extract selected channels and columns
         subsample_signal = sample[self.channels, :][:, indexes_columns]
-        
+
+        #print("Subsample signal shape")
         #print(subsample_signal.shape)
-                               
+
+        reshaped_subsample_signal = subsample_signal.reshape((1, len(self.channels), len(indexes_columns)))
+        print("Reshaped subsample signal shape")
+        print(reshaped_subsample_signal.shape)
+
+        transposed_reshaped_subsample_signal = np.transpose(reshaped_subsample_signal, (1, 0, 2))
+        print("Transposed seshaped subsample signal shape")
+        print(transposed_reshaped_subsample_signal.shape)
+                                       
         #return sample
-        return subsample_signal
+        #return subsample_signal
+        return transposed_reshaped_subsample_signal
 
 
 # ******************************************************************************
@@ -240,9 +257,14 @@ class CNNClassifier(nn.Module):
         #self.linear3 = nn.Linear(256, out_dim)
      
         input_features = n_input_data_dim1 * n_input_data_dim2
+
+        #print("CNNClassifier")
+        #print(n_input_data_dim1)
+        #print(n_input_data_dim2)
         
         self.Conv1 = nn.Sequential(
-            nn.Conv2d(in_channels = 1, 
+            nn.Conv2d(in_channels = n_input_data_dim1, 
+            #nn.Conv2d(in_channels = 1, 
                       out_channels = 64,
                       kernel_size = (3, 3),
                       stride = 1,
@@ -260,7 +282,7 @@ class CNNClassifier(nn.Module):
                       padding = 1
                      ),
             nn.Dropout(),
-            nn.MaxPool2d(2),
+            #nn.MaxPool2d(2),
             nn.ReLU(inplace=True)
         )
         
@@ -272,7 +294,7 @@ class CNNClassifier(nn.Module):
                       padding = 1
                      ),
             nn.Dropout(),
-            nn.MaxPool2d(2),
+            #nn.MaxPool2d(2),
             nn.ReLU(inplace=True)
         )
         
@@ -280,20 +302,25 @@ class CNNClassifier(nn.Module):
 
     def forward(self, x):
         
-        print("Before the flattening")
-        print(x.shape[0])
-        print(x.shape[1])
+        print("Forward init")
         print(x.shape)
         
         # Define the forward pass
         x = self.Conv1(x)
+        print("After conv1")
+        print(x.shape)
         x = self.Conv2(x)
+        print("After conv2")
+        print(x.shape)
         x = self.Conv3(x)
         
         # Perform the flattening of the input data to pass through the linear layers
         #reshaped_sample = sample.view(sample.shape[0]*sample.shape[1])
         x = x.view(x.shape[0], -1)
         #x = nn.Flatten(x)
+
+        print("After view")
+        print(x.shape)
         
         #print("After the flattening")
         #print(x.shape[0])
@@ -357,8 +384,7 @@ def train(model, optimizer, n_epochs, loss_fn, lr, train_loader, device, output_
     
     output_lines = []
     output_lines.append("\nn_epochs:{:d}".format(n_epochs))
-    
-    # Training loop
+        # Training loop
     for epoch in range(n_epochs):
         running_loss = 0.0
         accuracy_epoch = 0.0
@@ -371,6 +397,9 @@ def train(model, optimizer, n_epochs, loss_fn, lr, train_loader, device, output_
             # Move data and labels to the device
             batch_data = batch_data.to(device)
             batch_labels = batch_labels.to(device)
+
+            print("Batch data shape")
+            print(batch_data.shape)
         
             # Forward pass
             outputs = model(batch_data)
@@ -751,8 +780,8 @@ def main():
     print("Number of input features: {}".format(n_input_features))
 
     # Create an instance of the neural network and move it to the device
-    net = LinearClassifier(n_channels, n_data_per_channel, n_output_classes).to(device)
-    #net = CNNClassifier(n_channels, n_data_per_channel, n_output_classes).to(device)
+    #net = LinearClassifier(n_channels, n_data_per_channel, n_output_classes).to(device)
+    net = CNNClassifier(n_channels, n_data_per_channel, n_output_classes).to(device)
 
     #net.cuda()
     #net.cpu()
@@ -778,7 +807,11 @@ def main():
     # Summary of the model
     print("\nAutomatic summary of the model")
     #summary(net, input_size = (batch_size, 2040000, 4))
-    summary(net, input_size = (batch_size, n_input_features))
+    #summary(net, input_size = (batch_size, n_input_features))
+    #summary(net, input_size = (batch_size, n_channels))
+    #summary(net, input_size=(batch_size, n_channels, n_channels, n_data_per_channel))
+    #summary(net, input_size=(batch_size, n_channels, 1, n_data_per_channel))
+    #summary = torchinfo.summary(net, input_data=(batch_size, 1, n_channels, n_data_per_channel))
     #summary(net)
     
     # ************************
