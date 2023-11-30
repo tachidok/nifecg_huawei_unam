@@ -171,16 +171,17 @@ class SignalSubSample(object):
         #print(subsample_signal.shape)
 
         reshaped_subsample_signal = subsample_signal.reshape((1, len(self.channels), len(indexes_columns)))
-        print("Reshaped subsample signal shape")
-        print(reshaped_subsample_signal.shape)
+        #print("Reshaped subsample signal shape")
+        #print(reshaped_subsample_signal.shape)
 
-        transposed_reshaped_subsample_signal = np.transpose(reshaped_subsample_signal, (1, 0, 2))
-        print("Transposed seshaped subsample signal shape")
-        print(transposed_reshaped_subsample_signal.shape)
+        #transposed_reshaped_subsample_signal = np.transpose(reshaped_subsample_signal, (1, 0, 2))
+        #print("Transposed reshaped subsample signal shape")
+        #print(transposed_reshaped_subsample_signal.shape)
                                        
         #return sample
         #return subsample_signal
-        return transposed_reshaped_subsample_signal
+        return reshaped_subsample_signal
+        #return transposed_reshaped_subsample_signal
 
 
 # ******************************************************************************
@@ -263,14 +264,14 @@ class CNNClassifier(nn.Module):
         #print(n_input_data_dim2)
         
         self.Conv1 = nn.Sequential(
-            nn.Conv2d(in_channels = n_input_data_dim1, 
-            #nn.Conv2d(in_channels = 1, 
+            #nn.Conv2d(in_channels = n_input_data_dim1, 
+            nn.Conv2d(in_channels = 1, 
                       out_channels = 64,
                       kernel_size = (3, 3),
                       stride = 1,
                       padding = 1
                      ),
-            nn.BatchNorm2d(64),
+            #nn.BatchNorm2d(64),
             nn.ReLU(inplace=True)
         )
         
@@ -282,7 +283,7 @@ class CNNClassifier(nn.Module):
                       padding = 1
                      ),
             nn.Dropout(),
-            #nn.MaxPool2d(2),
+            nn.MaxPool2d(2),
             nn.ReLU(inplace=True)
         )
         
@@ -292,12 +293,14 @@ class CNNClassifier(nn.Module):
                       kernel_size = (3, 3),
                       stride = 1,
                       padding = 1
+                      #padding = 0
                      ),
             nn.Dropout(),
-            #nn.MaxPool2d(2),
+            nn.MaxPool2d(2),
             nn.ReLU(inplace=True)
         )
         
+        #self.linear1 = nn.Linear(128000, n_output, bias=True)
         self.linear1 = nn.Linear(256 * 3 * 3, n_output, bias=True)
 
     def forward(self, x):
@@ -313,12 +316,14 @@ class CNNClassifier(nn.Module):
         print("After conv2")
         print(x.shape)
         x = self.Conv3(x)
+        print("After conv3")
+        print(x.shape)
         
         # Perform the flattening of the input data to pass through the linear layers
         #reshaped_sample = sample.view(sample.shape[0]*sample.shape[1])
         x = x.view(x.shape[0], -1)
         #x = nn.Flatten(x)
-
+        
         print("After view")
         print(x.shape)
         
@@ -812,6 +817,7 @@ def main():
     #summary(net, input_size=(batch_size, n_channels, n_channels, n_data_per_channel))
     #summary(net, input_size=(batch_size, n_channels, 1, n_data_per_channel))
     #summary = torchinfo.summary(net, input_data=(batch_size, 1, n_channels, n_data_per_channel))
+    #summary(net, input_size=(batch_size, 1, n_channels, n_data_per_channel))
     #summary(net)
     
     # ************************
