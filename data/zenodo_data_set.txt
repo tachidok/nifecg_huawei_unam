@@ -1,0 +1,45 @@
+First dataset
+10.5281/zenodo.8415709
+https://doi.org/10.5281/zenodo.8415709
+https://zenodo.org/badge/DOI/10.5281/zenodo.8415709.svg
+https://zenodo.org/record/8415709
+
+Second dataset
+10.5281/zenodo.8429286
+https://doi.org/10.5281/zenodo.8429286
+https://zenodo.org/badge/DOI/10.5281/zenodo.8429286.svg
+https://zenodo.org/record/8429286
+
+
+NIFECG synthetic signals generated with fecgsym by PhysioNet: Dataset 1/2
+
+Julio Cesar Perez-Sansalvador
+Alejandro Barreiro Valdez
+Arelly Ornelas Vargas
+Kernel Enrique Prieto Moreno
+Juan Carlos Pérez Hernández
+
+Non-invasive fetal electrocardiogram (NIFECG) signals.
+
+Fetal's heart rate: 60 - 200 bpm
+
+Mother's heart rate: 65 - 120 bpm
+
+Sample frequency 1000 Hz
+
+8,008 signals in total
+
+1.0
+
+Download the files and join them as follows:
+
+cat tmp2.tar_part* > nifecg_signals.tar
+
+Untar the file with the following command:
+
+tar xvf nifecg_signals.tar
+
+NIFECG, Fetal heart rate, Mother heart rate
+
+Creative Commons Attribution 4.0 International
+

@@ -258,10 +258,11 @@ class CNNClassifier(nn.Module):
         #self.linear3 = nn.Linear(256, out_dim)
      
         input_features = n_input_data_dim1 * n_input_data_dim2
+        input_features_for_linear_layer = 256 * 1 * (n_input_data_dim1 // 4) * (n_input_data_dim2 // 4) # The //4 is because the two max pooling operations, each divides the spatial input size by 2 (because we are passing 2 as argument).
 
-        #print("CNNClassifier")
-        #print(n_input_data_dim1)
-        #print(n_input_data_dim2)
+        print("CNNClassifier")
+        print(n_input_data_dim1)
+        print(n_input_data_dim2)
         
         self.Conv1 = nn.Sequential(
             #nn.Conv2d(in_channels = n_input_data_dim1, 
@@ -271,7 +272,7 @@ class CNNClassifier(nn.Module):
                       stride = 1,
                       padding = 1
                      ),
-            #nn.BatchNorm2d(64),
+            nn.BatchNorm2d(64),
             nn.ReLU(inplace=True)
         )
         
@@ -301,37 +302,33 @@ class CNNClassifier(nn.Module):
         )
         
         #self.linear1 = nn.Linear(128000, n_output, bias=True)
-        self.linear1 = nn.Linear(256 * 3 * 3, n_output, bias=True)
+        #self.linear1 = nn.Linear(256 * 3 * 3, n_output, bias=True)
+        self.linear1 = nn.Linear(input_features_for_linear_layer, n_output, bias=True)
 
     def forward(self, x):
         
-        print("Forward init")
-        print(x.shape)
+        #print("Forward init")
+        #print(x.shape)
         
         # Define the forward pass
         x = self.Conv1(x)
-        print("After conv1")
-        print(x.shape)
+        #print("After conv1")
+        #print(x.shape)
         x = self.Conv2(x)
-        print("After conv2")
-        print(x.shape)
+        #print("After conv2")
+        #print(x.shape)
         x = self.Conv3(x)
-        print("After conv3")
-        print(x.shape)
+        #print("After conv3")
+        #print(x.shape)
         
         # Perform the flattening of the input data to pass through the linear layers
         #reshaped_sample = sample.view(sample.shape[0]*sample.shape[1])
         x = x.view(x.shape[0], -1)
         #x = nn.Flatten(x)
         
-        print("After view")
-        print(x.shape)
-        
-        #print("After the flattening")
-        #print(x.shape[0])
-        #print(x.shape[1])
+        #print("After view")
         #print(x.shape)
-        
+                
         x = self.linear1(x)
         
         #return F.log_softmax(x, dim=1)
@@ -403,8 +400,8 @@ def train(model, optimizer, n_epochs, loss_fn, lr, train_loader, device, output_
             batch_data = batch_data.to(device)
             batch_labels = batch_labels.to(device)
 
-            print("Batch data shape")
-            print(batch_data.shape)
+            #print("Batch data shape")
+            #print(batch_data.shape)
         
             # Forward pass
             outputs = model(batch_data)
@@ -817,7 +814,7 @@ def main():
     #summary(net, input_size=(batch_size, n_channels, n_channels, n_data_per_channel))
     #summary(net, input_size=(batch_size, n_channels, 1, n_data_per_channel))
     #summary = torchinfo.summary(net, input_data=(batch_size, 1, n_channels, n_data_per_channel))
-    #summary(net, input_size=(batch_size, 1, n_channels, n_data_per_channel))
+    summary(net, input_size=(batch_size, 1, n_channels, n_data_per_channel))
     #summary(net)
     
     # ************************
